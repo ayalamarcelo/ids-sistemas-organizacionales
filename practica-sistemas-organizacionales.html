@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica de sistemas organizacionales</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #24292e;
+            --muted-color: #586069;
+            --border-color: #e1e4e8;
+            --accent-color: #0366d6;
+            --code-bg: #f6f8fa;
+            --success-bg: #f0fff4;
+            --success-border: #34d058;
+            --error-bg: #ffeef0;
+            --error-border: #d73a49;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem 2rem;
+            background-color: var(--bg-color);
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.7rem;
+            font-weight: 500;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .exam-container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 260px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 850px) {
+            .exam-container {
+                grid-template-columns: 1fr;
+            }
+            aside {
+                position: static !important;
+                margin-bottom: 2rem;
+            }
+        }
+
+        /* Columna Izquierda: Scroll de Preguntas */
+        .questions-scroll-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .question-card {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.5rem;
+            scroll-margin-top: 2rem;
+        }
+
+        .question-header {
+            font-size: 0.85rem;
+            color: var(--muted-color);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .question-title {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.75rem 1rem;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .option-label:hover {
+            background: #f1f8ff;
+            border-color: var(--accent-color);
+        }
+
+        .option-label input {
+            margin-right: 0.75rem;
+            margin-top: 0.2rem;
+        }
+
+        /* Columna Derecha: Panel Fijo (Aside) */
+        aside {
+            position: sticky;
+            top: 2rem;
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.25rem;
+        }
+
+        aside h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: center;
+        }
+
+        .aside-subtitle {
+            font-size: 0.8rem;
+            color: var(--muted-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            justify-items: center;
+        }
+
+        .nav-btn {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            width: 40px;
+            height: 40px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent-color);
+            background: #f1f8ff;
+        }
+
+        .nav-btn.incorrect-answer {
+            background-color: var(--error-bg);
+            border-color: var(--error-border);
+            color: #721c24;
+            font-weight: 600;
+        }
+
+        .nav-btn.correct-answer {
+            background-color: var(--success-bg);
+            border-color: var(--success-border);
+            color: #155724;
+            font-weight: 600;
+        }
+
+        /* Botón de Enviar examen */
+        .submit-section {
+            margin-top: 1.5rem;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+        }
+
+        .btn {
+            background-color: var(--text-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            opacity: 0.85;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            margin-top: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--code-bg);
+            opacity: 1;
+        }
+
+        /* Cajas de retroalimentación (Ocultas hasta enviar) */
+        .feedback-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .feedback-box.correct {
+            background-color: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: #155724;
+            display: block;
+        }
+
+        .feedback-box.incorrect {
+            background-color: var(--error-bg);
+            border-color: var(--error-border);
+            color: #721c24;
+            display: block;
+        }
+
+        .explanation-details {
+            margin-top: 0.4rem;
+            font-size: 0.85rem;
+        }
+
+        /* Resultado global superior tras enviar */
+        .global-result-banner {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            display: none;
+        }
+
+        .global-result-banner h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.3rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Práctica de sistemas organizacionales</h1>
+    </header>
+
+    <div class="exam-container">
+        <!-- Columna Izquierda: Scroll con las 20 preguntas -->
+        <main class="questions-scroll-area" id="questions-container">
+            <!-- Banner de resultado global (Aparece tras enviar) -->
+            <div class="global-result-banner" id="global-banner">
+                <h2 id="banner-title">Evaluación Enviada</h2>
+                <p id="banner-score" style="margin: 0; font-weight: 600;"></p>
+            </div>
+
+            <!-- Las 20 preguntas se inyectarán aquí mediante JS -->
+        </main>
+
+        <!-- Columna Derecha: Panel de navegación lateral fijo -->
+        <aside>
+            <h3>Cuestionario</h3>
+            <p class="aside-subtitle">Estado de preguntas</p>
+            <div class="nav-grid" id="nav-grid">
+                <!-- Botones del 1 al 20 generados por JS -->
+            </div>
+            <div class="submit-section" id="submit-section-container">
+                <button class="btn" onclick="submitExam()">Enviar todo y terminar</button>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        const questionsData = [
+            {
+                theme: "Sistemas Organizacionales",
+                title: "¿Cuál es el propósito principal de un Sistema de Procesamiento de Transacciones (TPS)?",
+                options: [
+                    "A) Automatizar transacciones rutinarias y diarias del negocio.",
+                    "B) Proveer simulaciones financieras complejas para la alta gerencia.",
+                    "C) Emular el conocimiento humano y la lógica experta."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Los TPS operan a nivel operativo automatizando las transacciones rutinarias y diarias.",
+                    "Error: Las simulaciones financieras complejas corresponden a los DSS.",
+                    "Error: La emulación del conocimiento humano pertenece a los Sistemas Expertos (SE)."
+                ]
+            },
+            {
+                theme: "Sistemas Organizacionales",
+                title: "¿Qué nivel jerárquico utiliza principalmente los Sistemas de Información Gerencial (MIS)?",
+                options: [
+                    "A) Nivel Operativo diario.",
+                    "B) Nivel Administrativo / Gerencial Medio.",
+                    "C) Nivel Estratégico de Alta Dirección."
+                ],
+                correct: 1,
+                explanations: [
+                    "Error: El nivel operativo utiliza los TPS.",
+                    "¡Correcto! Aclaración: Los MIS proveen informes rutinarios y datos históricos para el nivel administrativo y gerencial medio.",
+                    "Error: La alta dirección utiliza sistemas ejecutivos (EIS/ESS)."
+                ]
+            },
+            {
+                theme: "Sistemas Organizacionales",
+                title: "¿Qué característica define a los Sistemas de Soporte a Decisiones (DSS)?",
+                options: [
+                    "A) Analizan datos complejos y no rutinarios mediante simulaciones para decisiones complejas.",
+                    "B) Registran unicamente las altas y bajas operativas diarias.",
+                    "C) Emiten únicamente tableros de control con indicadores clave (KPIs)."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Los DSS están diseñados para apoyar decisiones complejas en niveles tácticos y estratégicos.",
+                    "Error: El registro de operaciones diarias corresponde a los TPS.",
+                    "Error: Los tableros de control con KPIs corresponden a los EIS / ESS."
+                ]
+            },
+            {
+                theme: "Sistemas Organizacionales",
+                title: "¿Para qué se utilizan los Sistemas de Información Ejecutiva (EIS / ESS)?",
+                options: [
+                    "A) Para programar código en parejas y realizar pruebas automatizadas.",
+                    "B) Proveer tableros de control (dashboards) con indicadores clave (KPIs) para la alta dirección.",
+                    "C) Gestionar el flujo de tickets de soporte técnico de redes."
+                ],
+                correct: 1,
+                explanations: [
+                    "Error: La programación en parejas pertenece a las metodologías ágiles como XP.",
+                    "¡Correcto! Aclaración: Los EIS / ESS están orientados al nivel estratégico de la alta dirección.",
+                    "Error: El soporte técnico automatizado corresponde a sistemas expertos o herramientas de gestión."
+                ]
+            },
+            {
+                theme: "Sistemas Organizacionales",
+                title: "¿Cuál es un ejemplo claro de un Sistema Experto (SE)?",
+                options: [
+                    "A) Un punto de venta (POS) actualizando inventario en tiempo real.",
+                    "B) Un chatbot de diagnóstico técnico automatizado para soporte de redes.",
+                    "C) Un informe mensual de ventas desglosado por región."
+                ],
+                correct: 1,
+                explanations: [
+                    "Error: El punto de venta en tiempo real es un ejemplo clásico de TPS.",
+                    "¡Correcto! Aclaración: Los SE emulan el conocimiento y la lógica humana mediante bases de conocimientos y reglas.",
+                    "Error: El informe mensual de ventas es un ejemplo de MIS."
+                ]
+            },
+            {
+                theme: "Modelos Tradicionales",
+                title: "¿Qué define al modelo tradicional en Cascada (Waterfall)?",
+                options: [
+                    "A) Un modelo secuencial lineal donde cada fase debe concluirse antes de seguir.",
+                    "B) Un proceso ágil basado en Sprints cortos de trabajo iterativo.",
+                    "C) Un ciclo de desarrollo enfocado en prototipos rápidos y desechables."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Es un modelo predictivo ideal para proyectos con requisitos estables.",
+                    "Error: Los Sprints cortos corresponden a marcos ágiles como Scrum.",
+                    "Error: Los prototipos rápidos pertenecen a los modelos evolutivos."
+                ]
+            },
+            {
+                theme: "Modelos Tradicionales",
+                title: "¿Cuál es el propósito del modelo Incremental?",
+                options: [
+                    "A) Desechar código inicial de maquetación tras entender los requisitos.",
+                    "B) Construir el sistema por partes funcionales acumulativas.",
+                    "C) Asociar directamente cada fase de diseño con su etapa de pruebas."
+                ],
+                correct: 1,
+                explanations: [
+                    "Error: Desechar código tras entender requisitos define al prototipo desechable.",
+                    "¡Correcto! Aclaración: Permite entregar el software de manera gradual mediante porciones acumulativas.",
+                    "Error: Asociar diseño con pruebas define al Modelo en V."
+                ]
+            },
+            {
+                theme: "Modelos Tradicionales",
+                title: "¿Para qué se utiliza el Prototipo Desechable dentro de los modelos evolutivos?",
+                options: [
+                    "A) Para aclarar requerimientos oscuros mediante un prototipo rápido que luego se descarta.",
+                    "B) Para mantener el prototipo inicial directamente como producto final en producción.",
+                    "C) Para gestionar proyectos masivos evaluando riesgos de forma continua."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Se construye temporalmente para entender al cliente y se desecha el código inicial.",
+                    "Error: Mantener el modelo inicial corresponde al prototipo iterativo.",
+                    "Error: La gestión continua de riesgos es propia del modelo en Espiral."
+                ]
+            },
+            {
+                theme: "Modelos Tradicionales",
+                title: "¿Cómo opera el modelo evolutivo Prototipo Iterativo?",
+                options: [
+                    "A) Ejecutando una única pasada lineal sin opción a cambios.",
+                    "B) Refinando un modelo inicial ciclo a ciclo según la opinión y feedback de los usuarios.",
+                    "C) Desarrollando únicamente diagramas UML sin programar."
+                ],
+                correct: 1,
+                explanations: [
+                    "Error: Las pasadas lineales sin cambios corresponden al modelo en cascada.",
+                    "¡Correcto! Aclaración: Es un modelo tradicional antecesor de las metodologías ágiles basado en refinar iterativamente.",
+                    "Error: Los diagramas UML son parte estructurada de RUP."
+                ]
+            },
+            {
+                theme: "Modelos Tradicionales",
+                title: "¿Qué caracteriza al modelo en Espiral?",
+                options: [
+                    "A) Combinar el diseño iterativo con el análisis sistemático y continuo de riesgos.",
+                    "B) Entregar módulos contables cerrados de forma estrictamente lineal.",
+                    "C) Utilizar exclusivamente tableros visuales de tarjetas Kanban."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Está enfocado en proyectos grandes y complejos mediante la evaluación iterativa de riesgos.",
+                    "Error: La entrega lineal cerrada es propia de Cascada o Incremental tradicional.",
+                    "Error: Los tableros Kanban pertenecen a la gestión ágil de flujo."
+                ]
+            },
+            {
+                theme: "Modelos Tradicionales",
+                title: "¿Cuál es el enfoque principal del Modelo en V?",
+                options: [
+                    "A) Eliminar por completo la fase de documentación y pruebas.",
+                    "B) Asociar de forma directa cada fase de diseño con su respectiva etapa de validación y pruebas.",
+                    "C) Escribir pruebas unitarias antes del código fuente."
+                ],
+                correct: 1,
+                explanations: [
+                    "Error: El modelo en V enfatiza fuertemente la validación formal.",
+                    "¡Correcto! Aclaración: Extiende el enfoque estructurado vinculando el desarrollo con su validación paralela (ej. dispositivos médicos).",
+                    "Error: Escribir pruebas antes del código define a la práctica TDD."
+                ]
+            },
+            {
+                theme: "Modelos Tradicionales",
+                title: "¿Cómo guía el Proceso Unificado de Desarrollo Software (RUP) a los proyectos?",
+                options: [
+                    "A) Mediante 4 fases estructuradas (Inicio, Elaboración, Construcción, Transición) apoyadas en diagramas UML.",
+                    "B) Mediante reuniones diarias de 15 minutos en tableros digitales.",
+                    "C) Eliminando toda burocracia y entregando software semanalmente sin planificación."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: RUP es un proceso estructurado orientado a objetos para proyectos complejos de alta seguridad.",
+                    "Error: Las reuniones diarias de 15 minutos pertenecen a Scrum.",
+                    "Error: La ausencia total de planificación y burocracia describe marcos muy ligeros o informales."
+                ]
+            },
+            {
+                theme: "Metodologías Ágiles",
+                title: "¿Para qué se utiliza Adaptive Software Development (ASD)?",
+                options: [
+                    "A) Para construir sistemas complejos bajo entornos dinámicos mediante colaboración y aprendizaje continuo.",
+                    "B) Para establecer contratos cerrados e inflexibles a 5 años.",
+                    "C) Para realizar diseños estáticos de interfaces sin interacción del usuario."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: ASD se adapta perfectamente a entornos altamente cambiantes y emergentes.",
+                    "Error: Los contratos inflexibles corresponden a metodologías predictivas tradicionales.",
+                    "Error: El diseño de interfaces corresponde a herramientas como Figma."
+                ]
+            },
+            {
+                theme: "Metodologías Ágiles",
+                title: "¿Qué busca optimizar Crystal Clear en la gestión de equipos?",
+                options: [
+                    "A) Equipos masivos de más de 500 desarrolladores corporativos.",
+                    "B) La productividad priorizando la comunicación directa en equipos pequeños (< 10 personas).",
+                    "C) La ejecución secuencial estricta de fases sin comunicación."
+                ],
+                correct: 1,
+                explanations: [
+                    "Error: Crystal Clear está diseñado específicamente para equipos pequeños.",
+                    "¡Correcto! Aclaración: Es un proceso ligero enfocado en la comunicación y tamaño reducido del equipo.",
+                    "Error: La ejecución secuencial estricta define a Cascada."
+                ]
+            },
+            {
+                theme: "Metodologías Ágiles",
+                title: "¿Cuál es el propósito central de Feature Driven Development (FDD)?",
+                options: [
+                    "A) Desarrollar software iterativamente centrándose en funcionalidades específicas (features) de valor para el cliente.",
+                    "B) Redactar manuales de infraestructura técnica sin entregar código funcional.",
+                    "C) Monitorear el uso de memoria RAM y CPU en servidores."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: FDD organiza el desarrollo enfocado en características concretas y entregables.",
+                    "Error: FDD prioriza la entrega iterativa de características funcionales.",
+                    "Error: El monitoreo de recursos de servidor corresponde a infraestructura."
+                ]
+            },
+            {
+                theme: "Metodologías Ágiles",
+                title: "¿Qué promueve Lean Software Development (LSD)?",
+                options: [
+                    "A) Aumentar la burocracia interna y duplicar tareas administrativas.",
+                    "B) Eliminar desperdicios, optimizar el flujo de valor y minimizar costos.",
+                    "C) Retrasar las entregas de software el mayor tiempo posible."
+                ],
+                correct: 1,
+                explanations: [
+                    "Error: Aumentar la burocracia se considera un desperdicio dentro de la filosofía Lean.",
+                    "¡Correcto! Aclaración: Aplica principios de manufactura esbelta para eliminar todo lo que no aporte valor.",
+                    "Error: Lean busca acelerar y optimizar el flujo de entrega."
+                ]
+            },
+            {
+                theme: "Metodologías Ágiles",
+                title: "¿En qué consiste Open Unified Process (OpenUP)?",
+                options: [
+                    "A) En una versión ágil y ligera de RUP enfocada en ciclos iterativos.",
+                    "B) En un modelo en cascada puro con fases cerradas de 2 años.",
+                    "C) En un sistema experto de diagnóstico médico."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: OpenUP toma la estructura de RUP adaptándola a ciclos ágiles y ligeros.",
+                    "Error: Las fases cerradas de años corresponden al modelo predictivo clásico.",
+                    "Error: Un sistema experto de diagnóstico médico es una tipología de sistema organizacional."
+                ]
+            },
+            {
+                theme: "Metodologías Ágiles",
+                title: "¿Qué prácticas caracterizan a la Programación Extrema (XP)?",
+                options: [
+                    "A) Trabajar en solitario sin revisiones de código ni pruebas unitarias.",
+                    "B) Elevar la calidad del código ante cambios dinámicos mediante TDD y programación en pareja.",
+                    "C) Mantener una jerarquía estricta de mandos gerenciales."
+                ],
+                correct: 1,
+                explanations: [
+                    "Error: XP fomenta fuertemente la colaboración estrecha.",
+                    "¡Correcto! Aclaración: XP prioriza la excelencia técnica mediante prácticas extremas como Pair Programming y TDD.",
+                    "Error: Las jerarquías estrictas pertenecen a estructuras organizacionales tradicionales."
+                ]
+            },
+            {
+                theme: "Metodologías Ágiles",
+                title: "¿Cuál es la función principal de Scrum como marco de trabajo?",
+                options: [
+                    "A) Desarrollar productos complejos en ciclos cortos (sprints) con entregas funcionales continuas.",
+                    "B) Diseñar maquetaciones gráficas de pantallas e interfaces web.",
+                    "C) Centralizar la documentación técnica en wikis colaborativas."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Scrum organiza iteraciones cortas llamadas Sprints para inspeccionar y adaptar el producto.",
+                    "Error: El diseño gráfico de interfaces corresponde a Figma.",
+                    "Error: La centralización de documentación técnica corresponde a Notion."
+                ]
+            },
+            {
+                theme: "Metodologías Ágiles",
+                title: "¿Cómo opera el Desarrollo Dirigido por Pruebas (TDD)?",
+                options: [
+                    "A) Escribiendo las pruebas automatizadas antes de escribir el código fuente que resuelve la funcionalidad.",
+                    "B) Realizando pruebas manuales de aceptación al finalizar todo el proyecto de desarrollo.",
+                    "C) Omitiendo cualquier tipo de validación o testeo de software."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Sigue el ciclo estricto de escribir el test que falla, codificar para pasarlo y refactorizar.",
+                    "Error: Las pruebas manuales finales no forman parte de la práctica de TDD.",
+                    "Error: TDD se basa estrictamente en la creación previa de pruebas automatizadas."
+                ]
+            },
+            {
+                theme: "Metodologías Ágiles",
+                title: "¿Qué busca optimizar Kanban en los equipos de trabajo?",
+                options: [
+                    "A) Limitar el trabajo en progreso (WIP), visualizar cuellos de botella y optimizar el flujo de tareas.",
+                    "B) Redactar contratos legales inflexibles a largo plazo.",
+                    "C) Escribir código fuente en lenguajes estructurados tradicionales."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Kanban utiliza tableros visuales para gestionar el flujo continuo limitando la multitarea.",
+                    "Error: Los contratos inflexibles pertenecen a modelos predictivos.",
+                    "Error: La escritura de código se realiza en editores especializados."
+                ]
+            },
+            {
+                theme: "Metodologías Ágiles",
+                title: "¿Para qué se utiliza RAD (Desarrollo Rápido de Aplicaciones)?",
+                options: [
+                    "A) Para lograr alta velocidad mediante talleres, prototipos rápidos y componentes reutilizables.",
+                    "B) Para congelar los requerimientos del cliente durante 5 años.",
+                    "C) Para realizar auditorías de seguridad en redes corporativas."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: RAD es un proceso precursor ágil enfocado en la velocidad de construcción mediante prototipado.",
+                    "Error: Congelar requerimientos a largo plazo es característico de modelos rígidos.",
+                    "Error: Las auditorías de seguridad pertenecen a la gestión de infraestructura y redes."
+                ]
+            },
+            {
+                theme: "Herramientas de Gestión",
+                title: "¿Para qué se utiliza principalmente Jira en los equipos de desarrollo?",
+                options: [
+                    "A) Gestión integral de proyectos ágiles, seguimiento de tickets, roadmaps y control de tareas.",
+                    "B) Diseño colaborativo de interfaces de usuario (UI) y prototipos interactivos.",
+                    "C) Comunicación instantánea empresarial organizada por canales temáticos."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Jira es la herramienta líder para el seguimiento de incidencias y gestión de proyectos ágiles.",
+                    "Error: El diseño colaborativo de interfaces corresponde a Figma.",
+                    "Error: La comunicación instantánea por canales corresponde a Slack."
+                ]
+            },
+            {
+                theme: "Herramientas de Gestión",
+                title: "¿Cuál es el uso principal de Notion en un equipo de desarrollo?",
+                options: [
+                    "A) Centralizar documentación técnica, bases de datos colaborativas y wikis del equipo.",
+                    "B) Compilar código binario y gestionar despliegues en servidores de producción.",
+                    "C) Gestionar tableros simples estilo Kanban con tarjetas físicas."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Notion funciona como un espacio de trabajo modular versátil para la documentación interna.",
+                    "Error: La compilación y despliegue corresponden a herramientas de CI/CD.",
+                    "Error: La gestión visual simple por tarjetas se asocia más a Trello."
+                ]
+            },
+            {
+                theme: "Herramientas de Gestión",
+                title: "¿Qué función cumple Figma en los equipos actuales?",
+                options: [
+                    "A) Diseño colaborativo de interfaces (UI), experiencia de usuario (UX) y prototipos interactivos en tiempo real.",
+                    "B) Gestión integral de tareas ágiles y seguimiento de bugs de desarrollo.",
+                    "C) Creación de hojas de cálculo contables y presupuestos financieros."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Figma permite maquetar y diseñar flujos de pantalla visuales de forma colaborativa.",
+                    "Error: La gestión de tareas y bugs corresponde a herramientas como Jira.",
+                    "Error: Las hojas de cálculo corresponden a software ofimático."
+                ]
+            },
+            {
+                theme: "Herramientas de Gestión",
+                title: "¿Para qué se emplea principalmente Trello?",
+                options: [
+                    "A) Gestión visual simple de tareas mediante tableros estilo Kanban con tarjetas y etiquetas.",
+                    "B) Envío automatizado de correos masivos de marketing digital.",
+                    "C) Desarrollo y compilación de software en lenguajes orientados a objetos."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Trello ofrece un tablero visual intuitivo basado en tarjetas para el seguimiento de tareas.",
+                    "Error: El envío masivo de correos no es el propósito de Trello.",
+                    "Error: El desarrollo de software se realiza en entornos de programación."
+                ]
+            },
+            {
+                theme: "Herramientas de Gestión",
+                title: "¿Para qué se emplea principalmente Slack?",
+                options: [
+                    "A) Comunicación instantánea empresarial por canales temáticos, llamadas y bots.",
+                    "B) Diseño exclusivo de logotipos vectoriales e imágenes corporativas.",
+                    "C) Almacenamiento local de bases de datos relacionales SQL."
+                ],
+                correct: 0,
+                explanations: [
+                    "¡Correcto! Aclaración: Slack centraliza la comunicación y colaboración del equipo mediante canales temáticos.",
+                    "Error: El diseño de logotipos vectoriales corresponde a herramientas como Illustrator.",
+                    "Error: El almacenamiento de bases de datos corresponde a gestores de BD."
+                ]
+            }
+        ];
+
+        function initExam() {
+            const container = document.getElementById('questions-container');
+            const navGrid = document.getElementById('nav-grid');
+
+            questionsData.forEach((q, index) => {
+                const qNum = index + 1;
+
+                // Crear tarjeta de pregunta
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.id = `q-card-${qNum}`;
+
+                let optionsHtml = '';
+                q.options.forEach((opt, optIdx) => {
+                    optionsHtml += `
+                        <li class="option-item">
+                            <label class="option-label">
+                                <input type="radio" name="q${qNum}" value="${optIdx}">
+                                ${opt}
+                            </label>
+                        </li>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="question-header">Pregunta ${qNum} — ${q.theme}</div>
+                    <div class="question-title">${q.title}</div>
+                    <ul class="options-list">
+                        ${optionsHtml}
+                    </ul>
+                    <div class="feedback-box" id="feedback-${qNum}"></div>
+                `;
+                container.appendChild(card);
+
+                // Crear botón en el panel de navegación lateral
+                const navBtn = document.createElement('button');
+                navBtn.className = 'nav-btn';
+                navBtn.id = `nav-btn-${qNum}`;
+                navBtn.textContent = qNum;
+                navBtn.onclick = () => {
+                    document.getElementById(`q-card-${qNum}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                };
+                navGrid.appendChild(navBtn);
+            });
+        }
+
+        function scrollToQuestion(qNum) {
+            document.getElementById(`q-card-${qNum}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function submitExam() {
+            let score = 0;
+            let answeredCount = 0;
+
+            for (let i = 1; i <= 27; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                const feedbackBox = document.getElementById(`feedback-${i}`);
+                const navBtn = document.getElementById(`nav-btn-${i}`);
+                const qData = questionsData[i - 1];
+
+                navBtn.classList.remove('correct-answer', 'incorrect-answer');
+
+                if (selected) {
+                    answeredCount++;
+                    const val = parseInt(selected.value);
+                    feedbackBox.className = "feedback-box";
+
+                    if (val === qData.correct) {
+                        score++;
+                        feedbackBox.classList.add("correct");
+                        feedbackBox.innerHTML = `<strong>Respuesta correcta:</strong><div class="explanation-details">${qData.explanations[val]}</div>`;
+                        navBtn.classList.add('correct-answer');
+                    } else {
+                        feedbackBox.classList.add("incorrect");
+                        feedbackBox.innerHTML = `<strong>Respuesta incorrecta:</strong><div class="explanation-details">${qData.explanations[val]}</div>`;
+                        navBtn.classList.add('incorrect-answer'); // Rojo si falló
+                    }
+                } else {
+                    // Si no respondió, cuenta como incorrecto
+                    feedbackBox.className = "feedback-box incorrect";
+                    feedbackBox.innerHTML = `<strong>No respondida.</strong><div class="explanation-details">La respuesta correcta era la opción ${qData.correct + 1}. ${qData.explanations[qData.correct]}</div>`;
+                    navBtn.classList.add('incorrect-answer');
+                }
+            }
+
+            // Mostrar banner superior con nota global
+            const banner = document.getElementById('global-banner');
+            const bannerTitle = document.getElementById('banner-title');
+            const bannerScore = document.getElementById('banner-score');
+
+            banner.style.display = 'block';
+            bannerTitle.textContent = "Resultados de la Evaluación";
+            bannerScore.textContent = `Calificación final: ${score} de 27 correctas (${Math.round((score/27)*100)}%)`;
+
+            // Cambiar botón de enviar por botón de reiniciar
+            const submitContainer = document.getElementById('submit-section-container');
+            submitContainer.innerHTML = `<button class="btn btn-secondary" onclick="resetExam()">Reiniciar Examen</button>`;
+
+            // Desplazar arriba para ver el resumen
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetExam() {
+            // Limpiar inputs
+            document.querySelectorAll('input[type="radio"]').forEach(input => input.checked = false);
+            
+            // Ocultar banners y feedbacks
+            document.getElementById('global-banner').style.display = 'none';
+            for (let i = 1; i <= 27; i++) {
+                const fb = document.getElementById(`feedback-${i}`);
+                fb.className = "feedback-box";
+                fb.innerHTML = "";
+                document.getElementById(`nav-btn-${i}`).classList.remove('correct-answer', 'incorrect-answer');
+            }
+
+            // Restaurar botón de enviar
+            const submitContainer = document.getElementById('submit-section-container');
+            submitContainer.innerHTML = `<button class="btn" onclick="submitExam()">Enviar todo y terminar</button>`;
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.onload = initExam;
+    </script>
+</body>
+</html>
